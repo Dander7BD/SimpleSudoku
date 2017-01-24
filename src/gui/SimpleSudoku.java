@@ -3,13 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package simplesudoku;
+package gui;
 
+import gamelogic.Sudoku4x4;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -19,10 +21,35 @@ import javafx.stage.Stage;
  */
 public class SimpleSudoku extends Application
 {
+    private final Sudoku4x4 gameInstance = new Sudoku4x4();
     
     @Override
     public void start(Stage primaryStage)
     {
+        StackPane root = new StackPane();
+        
+        // create the textfields
+        for(int row = 0; row < 4; ++row) for(int col = 0; col < 4; ++col)
+        {
+            TextField control = new TextField();
+            
+            control.setLayoutX(((double)col) * control.getWidth());
+            control.setLayoutX(((double)row) * control.getHeight());
+            
+            int value = this.gameInstance.get(row, col);
+            if( value != 0)
+            {
+                control.setText(Integer.toString(value));
+                control.setEditable(false);
+            }
+            else
+            {
+                // todo: bind onValueChanged event handler
+            }
+            
+            root.getChildren().add(control);
+        }
+        
         Button btn = new Button();
         btn.setText("Say 'Hello World'");
         btn.setOnAction(new EventHandler<ActionEvent>()
@@ -35,12 +62,11 @@ public class SimpleSudoku extends Application
             }
         });
         
-        StackPane root = new StackPane();
-        root.getChildren().add(btn);
+        //root.getChildren().add(btn);
         
         Scene scene = new Scene(root, 300, 250);
         
-        primaryStage.setTitle("Hello World!");
+        primaryStage.setTitle("Simple Sudoku");
         primaryStage.setScene(scene);
         primaryStage.show();
     }

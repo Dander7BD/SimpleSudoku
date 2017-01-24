@@ -19,3 +19,5 @@ Good Luck"
 I already decided to use JavaFX as GUI
 
 I'll clock my start at 2017-01-23 : 12.30
+Had to stop at 13.52 due to laptop battery depletion. Oops >.<
+Resuming at 2017-01-24 : 11.30
