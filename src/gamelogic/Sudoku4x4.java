@@ -78,7 +78,7 @@ public class Sudoku4x4
     // returns the subField row* or col* index. *Depends on input context 
     private static int subField(int rowOrCol)
     {
-        return rowOrCol >> 1;
+        return (rowOrCol >> 1) << 1;
     }
     
     private static void checkBoundary(int v, int min, int max) throws IndexOutOfBoundsException
@@ -168,7 +168,7 @@ public class Sudoku4x4
             for(int col = 0; col < 4; ++col)
             {
                 int val = ran.nextInt(4);
-                while(!potential[val][row][col]) // todo: bug found here
+                while(!potential[val][row][col])
                     val = (val+1) % 4;
                 paintValueLock(row, col, potential[val]);
                 solution[row][col] = val+1;
