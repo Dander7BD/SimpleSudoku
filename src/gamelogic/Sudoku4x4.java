@@ -27,60 +27,8 @@ public class Sudoku4x4
         }
     }
     
-    private List<ConflictingCell> checkForConflicts(int value, int row, int col)
-    {
-        List<ConflictingCell> conflicts = new ArrayList<>(3);
-        
-        { // check the subField
-            int sRow = Sudoku4x4.subField(row),
-                sCol = Sudoku4x4.subField(col);
-
-            for(int dr = 0, dc = 0; dr < 2; ++dc)
-            {                
-                if(dc == 2) { dc = 0; ++dr; }            
-                if(this.cell[sRow+dr][sCol+dc] == value)
-                {
-                    conflicts.add(new ConflictingCell(sRow+dr, sCol+dc));
-                    break;
-                }
-            }
-        }
-        
-        // check row
-        for(int r = 0; r < 4; ++r)
-        {
-            if(this.cell[r][col] == value)
-            {
-                conflicts.add(new ConflictingCell(r, col));
-                break;
-            }
-        }
-        
-        // check column
-        for(int c = 0; c < 4; ++c)
-        {
-            if(this.cell[row][c] == value)
-            {
-                conflicts.add(new ConflictingCell(row, c));
-                break;
-            }
-        }
-        
-        return conflicts;
-    }
-    
     private final int cell[][] = new int[4][4];
     private final boolean locked[][] = new boolean[4][4];
-    
-    private void checkBoundary(int v, int min, int max) throws IndexOutOfBoundsException
-    {
-        if( v < min || v > max) throw new IndexOutOfBoundsException();
-    }
-    
-    private void checkValue(int v) throws Exception
-    {
-        if( v < 1 || v > 4) throw new Exception("Value needs to be 1-4.\nFor clearing use the clear(int, int, ..) methods");
-    }
     
     public Sudoku4x4() 
     {
@@ -100,8 +48,8 @@ public class Sudoku4x4
     // if returns 0, then that field isn't filled
     public int get(int row, int col)
     {
-        this.checkBoundary(row, 0, 3);
-        this.checkBoundary(col, 0, 3);
+        checkBoundary(row, 0, 3);
+        checkBoundary(col, 0, 3);
 
         return this.cell[row][col];
     }
@@ -109,9 +57,9 @@ public class Sudoku4x4
     // returns a list of conflicting cells with the same input value. If the list.size() > 0 then the value of the target cell remains unchanged.
     public List<ConflictingCell> set(int row, int col, int value) throws Exception
     {
-        this.checkBoundary(row, 0, 3);
-        this.checkBoundary(col, 0, 3);
-        this.checkValue(value);
+        checkBoundary(row, 0, 3);
+        checkBoundary(col, 0, 3);
+        checkValue(value);
 
         List<ConflictingCell> conflicts = this.checkForConflicts(value, row, col);
         if(conflicts.size() < 1)
@@ -121,8 +69,8 @@ public class Sudoku4x4
         
     public void clear(int row, int col)
     {
-        this.checkBoundary(row, 0, 3);
-        this.checkBoundary(col, 0, 3);
+        checkBoundary(row, 0, 3);
+        checkBoundary(col, 0, 3);
 
         this.cell[row][col] = 0;
     }
@@ -133,11 +81,21 @@ public class Sudoku4x4
         return rowOrCol >> 1;
     }
     
+    private static void checkBoundary(int v, int min, int max) throws IndexOutOfBoundsException
+    {
+        if( v < min || v > max) throw new IndexOutOfBoundsException();
+    }
+    
+    private static void checkValue(int v) throws Exception
+    {
+        if( v < 1 || v > 4) throw new Exception("Value needs to be 1-4.\nFor clearing use the clear(int, int, ..) methods");
+    }
+        
     private static void paintValueLock(int row, int col, boolean valueCanvas[][])
     {
         { // lock all in subfield
-            int sfRow = Sudoku4x4.subField(row) * 2,
-                sfCol = Sudoku4x4.subField(col) * 2;
+            int sfRow = Sudoku4x4.subField(row),
+                sfCol = Sudoku4x4.subField(col);
 
             valueCanvas[sfRow][sfCol] = false;
             valueCanvas[sfRow][sfCol+1] = false;
@@ -146,12 +104,12 @@ public class Sudoku4x4
         }
         
         // lock all in row
-        for(int i = 0; i < 4; ++i)
-            valueCanvas[i][col] = false;
+        for(int r = 0; r < 4; ++r)
+            valueCanvas[r][col] = false;
         
         // lock all in col
-        for(int i = 0; i < 4; ++i)
-            valueCanvas[col][i] = false;
+        for(int c = 0; c < 4; ++c)
+            valueCanvas[row][c] = false;
     }
     
     private static boolean[][][] generateFuzzyBoard()
@@ -183,7 +141,7 @@ public class Sudoku4x4
     }
     
     // returns 0 if there is no 100% certain value. Else rerturns the value (1-4)
-    private int getFuzzyCertain(int row, int col, boolean potential[][][])
+    private static int getFuzzyCertain(int row, int col, boolean potential[][][])
     {
         int value = 0,
             count = 0;
@@ -205,13 +163,16 @@ public class Sudoku4x4
         int solution[][] = new int[4][4];
         boolean potential[][][] = generateFuzzyBoard();
         
-        for(int row = 0; row < 4; ++row) for(int col = 0; col < 4; ++col)
+        for(int row = 0; row < 4; ++row)
         {
-            int val = ran.nextInt(4);
-            while(!potential[val][row][col])
-                val = (val+1) % 4;
-            paintValueLock(row, col, potential[val]);
-            solution[row][col] = val;
+            for(int col = 0; col < 4; ++col)
+            {
+                int val = ran.nextInt(4);
+                while(!potential[val][row][col]) // todo: bug found here
+                    val = (val+1) % 4;
+                paintValueLock(row, col, potential[val]);
+                solution[row][col] = val+1;
+            }
         }
         
         return solution;
@@ -296,4 +257,47 @@ public class Sudoku4x4
             }
         }
     }
+    
+    private List<ConflictingCell> checkForConflicts(int value, int row, int col)
+    {
+        List<ConflictingCell> conflicts = new ArrayList<>(3);
+        
+        { // check the subField
+            int sRow = Sudoku4x4.subField(row),
+                sCol = Sudoku4x4.subField(col);
+
+            for(int dr = 0, dc = 0; dr < 2; ++dc)
+            {                
+                if(dc == 2) { dc = 0; ++dr; }            
+                if(this.cell[sRow+dr][sCol+dc] == value)
+                {
+                    conflicts.add(new ConflictingCell(sRow+dr, sCol+dc));
+                    break;
+                }
+            }
+        }
+        
+        // check row
+        for(int r = 0; r < 4; ++r)
+        {
+            if(this.cell[r][col] == value)
+            {
+                conflicts.add(new ConflictingCell(r, col));
+                break;
+            }
+        }
+        
+        // check column
+        for(int c = 0; c < 4; ++c)
+        {
+            if(this.cell[row][c] == value)
+            {
+                conflicts.add(new ConflictingCell(row, c));
+                break;
+            }
+        }
+        
+        return conflicts;
+    }
+
 }
